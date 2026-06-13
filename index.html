@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartPark Enterprise v8.0</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="router-view"></div>
+
+    <template id="page-login">
+        <div class="auth-wrapper">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h2>💎 SmartPark Enterprise</h2>
+                    <p>IoT-Driven Facility Management Matrix</p>
+                </div>
+                
+                <div class="auth-tabs">
+                    <button id="tab-login" class="auth-tab active" onclick="setAuthMode('login')">Sign In</button>
+                    <button id="tab-signup" class="auth-tab" onclick="setAuthMode('signup')">Register Driver</button>
+                </div>
+
+                <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+                    <div class="form-group">
+                        <label for="username">System Handle Identifier</label>
+                        <input type="text" id="username" required placeholder="Enter username...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Security Access Key</label>
+                        <input type="password" id="password" required placeholder="Enter passcode...">
+                    </div>
+
+                    <div id="signup-only-fields" class="hidden">
+                        <div class="form-group">
+                            <label for="plate">Vehicle Plate Index</label>
+                            <input type="text" id="plate" placeholder="WXM 4231">
+                        </div>
+                        <div class="form-group">
+                            <label for="role">Network Access Tier</label>
+                            <select id="role">
+                                <option value="user">Standard Driver Terminal</option>
+                                <option value="staff">HQ Facility Management Admin</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="auth-submit-btn">Authorize Pipeline Link</button>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <template id="page-dashboard">
+        <div class="dashboard-layout">
+            <aside class="sidebar">
+                <h2>💎 SmartPark</h2>
+                <nav>
+                    <div class="nav-item active" onclick="switchTab('home')">📊 Home Overview</div>
+                    <div class="nav-item" onclick="switchTab('gate-simulation')">🚗 Physical Gate Entry</div>
+                    <div class="nav-item" onclick="switchTab('topup')">💳 Top-Up Wallet</div>
+                    <div class="nav-item" onclick="switchTab('history')">📜 Ledger History</div>
+                    <div class="nav-item logout" onclick="logout()">Secure Exit</div>
+                </nav>
+            </aside>
+            <main class="main-content">
+                <header class="top-bar">
+                    <h1>Welcome back, <span class="user-display">--</span> <span id="tier-badge" class="tier-badge-pill tier-bronze">Bronze Tier</span></h1>
+                    <div class="profile-pill">
+                        <span>🚗 <span class="plate-display">--</span></span>
+                        <span>🪙 <span class="points-display">0</span> PTS</span>
+                        <span class="balance-badge">$<span class="balance-display">0.00</span></span>
+                    </div>
+                </header>
+
+                <div id="tab-home" class="tab-pane">
+                    <div id="active-session-view" class="hidden">
+                        <div class="driver-split">
+                            <div class="card panel-hero">
+                                <div class="hero-header-flex">
+                                    <h3>Active Lot Loop Analytics</h3>
+                                    <span id="validation-badge" class="badge-discount hidden">RECEIPT VALIDATION APPLIED (-$2.00)</span>
+                                </div>
+                                <div class="metrics">
+                                    <div class="metric">
+                                        <label>Target Bay Node</label>
+                                        <span id="session-bay">--</span>
+                                    </div>
+                                    <div class="metric">
+                                        <label>Live Duration</label>
+                                        <span id="session-duration">00m 00s</span>
+                                    </div>
+                                    <div class="metric">
+                                        <label>Accrued Cost</label>
+                                        <span class="cost-text" id="session-cost">$0.00</span>
+                                    </div>
+                                </div>
+                                <div class="button-row" style="margin-top: 25px; display: flex; gap: 15px;">
+                                    <button class="action-btn validate-btn" onclick="validateMallReceipt()">Scan Mall Shopping Receipt</button>
+                                    <button class="action-btn exit-loop" onclick="simulateExitLoop()">Pay & Actuate Exit Gate</button>
+                                </div>
+                            </div>
+
+                            <div class="card ticket-card holographic-pass" id="digital-ticket-box" onclick="interactWithTransitPass()">
+                                <div class="pass-laser-line" id="scanner-laser"></div>
+                                <div class="pass-header">
+                                    <div>
+                                        <span class="pass-chip"></span>
+                                        <h3>SmartPark Transit Pass</h3>
+                                    </div>
+                                    <span id="ticket-status-flash" class="status-dot">● READY</span>
+                                </div>
+                                <p class="pass-hint">Tap pass to transmit RFID payload to scanner terminal.</p>
+                                <div class="barcode-mesh" id="interactive-barcode-area">
+                                    <span id="barcode-lines">||||| | |||| || ||| || |||| |</span>
+                                    <small id="ticket-id">PASS-FETCHING-OS</small>
+                                </div>
+                                <div class="pass-footer">
+                                    <span>SYSTEM: v8.0 MATRIX</span>
+                                    <span id="pass-timestamp">00:00:00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="no-session-view" class="card">
+                        <h3>No Active Parking Session</h3>
+                        <p style="color:var(--text-muted); margin-bottom: 20px;">Your vehicle is outside our containment networks. Navigate to the Physical Gate Entry tab to route an entryway.</p>
+                    </div>
+                </div>
+
+                <div id="tab-gate-simulation" class="tab-pane hidden">
+                    <div class="card">
+                        <h3>Lot Entrance Loop Terminal</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+                            Select an available bay on the real-time floor plan layout map below to pull a ticket and lift the boom barrier.
+                        </p>
+                        <div class="gate-status-banner" id="gate-occupancy-banner">Checking Layout Matrix...</div>
+                        <div class="interactive-map-container">
+                            <h4>📍 Level 1 Parking Bay Node Layout Map</h4>
+                            <div class="mall-parking-grid" id="driver-map-grid"></div>
+                        </div>
+                        <div style="margin-top: 25px;" id="gate-entry-action-block"></div>
+                    </div>
+                </div>
+
+                <div id="tab-topup" class="tab-pane hidden">
+                    <div class="card">
+                        <h3>Refuel Digital Card Balance</h3>
+                        <div class="pill-grid">
+                            <button class="pill-btn" onclick="addFunds(10)">+$10.00</button>
+                            <button class="pill-btn" onclick="addFunds(25)">+$25.00</button>
+                            <button class="pill-btn" onclick="addFunds(50)">+$50.00</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-history" class="tab-pane hidden">
+                    <div class="card no-padding">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Reference ID</th>
+                                    <th>Bay Blocked</th>
+                                    <th>Duration Inside</th>
+                                    <th>Settled Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-rows"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </template>
+
+    <template id="page-staff">
+        <div class="staff-layout">
+            <header class="staff-header">
+                <h2>🛡️ SmartPark HQ Command Center <small style="color: var(--danger); font-size: 0.8rem; margin-left: 10px;">v8.0 Enterprise Matrix</small></h2>
+                <div>Admin: <span class="user-display">--</span> | <button onclick="logout()" class="exit-btn">Exit System</button></div>
+            </header>
+            
+            <div class="staff-container">
+                <div class="analytics-deck">
+                    <div class="stat-card">
+                        <label>Gross Collected Revenue</label>
+                        <h2 id="hq-revenue">$0.00</h2>
+                    </div>
+                    <div class="stat-card">
+                        <label>Active Occupancy Rate</label>
+                        <h2 id="hq-occupancy">0%</h2>
+                    </div>
+                    <div class="stat-card">
+                        <label>AI Traffic Risk Projection</label>
+                        <h2 id="hq-traffic-prediction" style="color: var(--success);">OPTIMAL FLOW</h2>
+                    </div>
+                    <div class="stat-card">
+                        <label>System Gate Status</label>
+                        <h2 id="hq-gate-status" class="status-green">SECURELY LOCKED</h2>
+                    </div>
+                </div>
+
+                <div class="staff-double-deck">
+                    <div class="card visual-analytics-card">
+                        <h3>📈 Dynamic Capacity Matrix Load</h3>
+                        <div class="chart-container">
+                            <div class="chart-bar-wrapper">
+                                <label>Occupied Nodes</label>
+                                <div class="progress-track"><div id="bar-occupied" class="progress-fill danger-fill" style="width: 0%"></div></div>
+                            </div>
+                            <div class="chart-bar-wrapper">
+                                <label>Available Channels</label>
+                                <div class="progress-track"><div id="bar-vacant" class="progress-fill success-fill" style="width: 100%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card alert-ticker-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h3>Live Telemetry Array Stream</h3>
+                            <button class="purge-btn" style="margin:0;" onclick="clearTelemetryFeed()">Clear Logs</button>
+                        </div>
+                        <div class="ticker-box" id="system-notification-feed"></div>
+                    </div>
+                </div>
+
+                <div class="override-panel-grid">
+                    <div class="card">
+                        <h3>IoT Hardware Remote Actuation</h3>
+                        <div class="button-row">
+                            <button class="action-btn trigger-open" onclick="toggleGateOverride(true)">Emergency Gate Override Open</button>
+                            <button class="action-btn trigger-close" onclick="toggleGateOverride(false)">Drop Barrier Boom Arm</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>VIP Access Clearance Priority Management</h3>
+                        <div class="whitelist-input-row">
+                            <input type="text" id="whitelist-input" placeholder="Enter Plate Number (e.g. VIP-777)">
+                            <button class="action-btn" onclick="addPlateToWhitelist()">Authorize VIP Pass</button>
+                        </div>
+                        <div class="vip-list-preview" id="vip-badge-rack"></div>
+                    </div>
+                </div>
+
+                <div class="staff-split-grid">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3>IoT Space Node Matrix Layout</h3>
+                            <small style="color: var(--text-muted)">Click node to lock/unlock bay</small>
+                        </div>
+                        <div class="sensor-grid" id="staff-sensor-grid"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>User Database Record Management Panel</h3>
+                        <div class="search-box">
+                            <input type="text" id="log-search" oninput="filterAuditLogs()" placeholder="🔍 Search profiles by handle name...">
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="premium-table condensed">
+                                <thead>
+                                    <tr>
+                                        <th>Identifier</th>
+                                        <th>Plate Track</th>
+                                        <th>Role Context</th>
+                                        <th style="text-align: right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="audit-log-rows"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script src="app.js"></script>
+</body>
+</html>
